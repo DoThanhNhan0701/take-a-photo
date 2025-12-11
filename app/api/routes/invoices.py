@@ -13,14 +13,76 @@ from app.models.user import User
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 
 
-@router.post("/", response_model=invoice_schemas.InvoiceResponse, status_code=status.HTTP_201_CREATED)
-def create_invoice(
-    invoice: invoice_schemas.InvoiceCreate,
+@router.post("/", status_code=status.HTTP_201_CREATED)
+async def create_invoice(
+    location_id: Optional[uuid.UUID] = Form(None),
+    category_id: Optional[int] = Form(None),
+    note: Optional[str] = Form(None),
+    status: str = Form("draft"),
+    file: UploadFile = File(...),
+    gps_latitude: Optional[float] = Form(None, include_in_schema=False),
+    gps_longitude: Optional[float] = Form(None, include_in_schema=False),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Create a new invoice (auto-assigned to current user)"""
-    return invoice_crud.create_invoice(db=db, invoice=invoice, user_id=current_user.id)
+    """Create a new invoice with an image (auto-assigned to current user)"""
+    # 1. Create Invoice
+    # Add GPS to extra_metadata if provided
+    extra_metadata = {}
+    if gps_latitude is not None:
+        extra_metadata["gps_latitude"] = float(gps_latitude)
+    if gps_longitude is not None:
+        extra_metadata["gps_longitude"] = float(gps_longitude)
+        
+    invoice_data = invoice_schemas.InvoiceCreate(
+        location_id=location_id,
+        category_id=category_id,
+        note=note,
+        status=status,
+        extra_metadata=extra_metadata
+    )
+    db_invoice = invoice_crud.create_invoice(db=db, invoice=invoice_data, user_id=current_user.id)
+    
+    # 2. Save Image
+    try:
+        # Save file to uploads directory organized by year/month
+        from datetime import datetime
+        now = datetime.now()
+        upload_dir = os.path.join("uploads", str(now.year), f"{now.month:02d}")
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Generate unique filename
+        file_ext = os.path.splitext(file.filename)[1]
+        unique_filename = f"{uuid.uuid4()}{file_ext}"
+        file_path = os.path.join(upload_dir, unique_filename)
+        
+        with open(file_path, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+            file_size = len(content)
+        
+        # 3. Create Image Record
+        invoice_crud.add_invoice_image(
+            db=db,
+            invoice_id=db_invoice.id,
+            file_path=file_path,
+            file_name=file.filename,
+            file_size=file_size,
+            mime_type=file.content_type,
+            gps_latitude=gps_latitude,
+            gps_longitude=gps_longitude
+        )
+        
+        # Refresh invoice to include images
+        db.refresh(db_invoice)
+        
+        # Validate model to ensure structure is correct
+        validated = invoice_schemas.InvoiceWithImages.model_validate(db_invoice)
+        return validated.model_dump()
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating invoice: {str(e)}")
+
 
 
 @router.get("/", response_model=List[invoice_schemas.InvoiceResponse])
@@ -47,95 +109,6 @@ def list_invoices(
     return invoices
 
 
-@router.get("/{invoice_id}", response_model=invoice_schemas.InvoiceWithImages)
-def get_invoice(
-    invoice_id: uuid.UUID,
-    with_images: bool = Query(True, description="Include images in response"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Get an invoice by ID (requires authentication)"""
-    db_invoice = invoice_crud.get_invoice(db, invoice_id=invoice_id, with_images=with_images)
-    if db_invoice is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found")
-    return db_invoice
 
 
-@router.put("/{invoice_id}", response_model=invoice_schemas.InvoiceResponse)
-def update_invoice(
-    invoice_id: uuid.UUID,
-    invoice: invoice_schemas.InvoiceUpdate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Update an invoice (requires authentication)"""
-    db_invoice = invoice_crud.update_invoice(db, invoice_id=invoice_id, invoice=invoice)
-    if db_invoice is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found")
-    return db_invoice
-
-
-@router.delete("/{invoice_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_invoice(
-    invoice_id: uuid.UUID,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Delete an invoice (requires authentication)"""
-    success = invoice_crud.delete_invoice(db, invoice_id=invoice_id)
-    if not success:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found")
-    return None
-
-
-    return invoices
-
-
-@router.post("/{invoice_id}/images", status_code=status.HTTP_201_CREATED)
-async def upload_invoice_image(
-    invoice_id: uuid.UUID,
-    file: UploadFile = File(...),
-    gps_latitude: Optional[float] = Form(None),
-    gps_longitude: Optional[float] = Form(None),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Upload an image for an invoice"""
-    # Verify invoice exists and belongs to user (or admin)
-    invoice = invoice_crud.get_invoice(db, invoice_id=invoice_id)
-    if not invoice:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found")
-    
-    if invoice.user_id != current_user.id and current_user.role != 'admin':
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
-    
-    # Save file to uploads directory organized by year/month
-    from datetime import datetime
-    now = datetime.now()
-    upload_dir = os.path.join("uploads", str(now.year), f"{now.month:02d}")
-    os.makedirs(upload_dir, exist_ok=True)
-    
-    # Generate unique filename
-    file_ext = os.path.splitext(file.filename)[1]
-    unique_filename = f"{uuid.uuid4()}{file_ext}"
-    file_path = os.path.join(upload_dir, unique_filename)
-    
-    with open(file_path, "wb") as buffer:
-        content = await file.read()
-        buffer.write(content)
-        file_size = len(content)
-    
-    # Create database record
-    image = invoice_crud.add_invoice_image(
-        db=db,
-        invoice_id=invoice_id,
-        file_path=file_path,
-        file_name=file.filename,
-        file_size=file_size,
-        mime_type=file.content_type,
-        gps_latitude=gps_latitude,
-        gps_longitude=gps_longitude
-    )
-    
-    return image
 

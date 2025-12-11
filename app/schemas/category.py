@@ -15,13 +15,7 @@ class CategoryCreate(CategoryBase):
     is_active: bool = True
 
 
-class CategoryUpdate(BaseModel):
-    """Schema for updating category information"""
-    name: Optional[str] = Field(None, max_length=100)
-    code: Optional[str] = Field(None, max_length=50)
-    icon_name: Optional[str] = Field(None, max_length=50)
-    description: Optional[str] = None
-    is_active: Optional[bool] = None
+
 
 
 class CategoryResponse(CategoryBase):

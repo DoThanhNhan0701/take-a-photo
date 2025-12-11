@@ -1,15 +1,14 @@
 """
 Pydantic schemas for request/response validation
 """
-from app.schemas.user import UserBase, UserCreate, UserUpdate, UserResponse, UserLogin
+from app.schemas.user import UserBase, UserCreate, UserResponse, UserLogin
 from app.schemas.token import Token, TokenData, RefreshTokenRequest
-from app.schemas.location import LocationBase, LocationCreate, LocationUpdate, LocationResponse
-from app.schemas.category import CategoryBase, CategoryCreate, CategoryUpdate, CategoryResponse
+from app.schemas.location import LocationBase, LocationCreate, LocationResponse
+from app.schemas.category import CategoryBase, CategoryCreate, CategoryResponse
 from app.schemas.invoice import (
     InvoiceStatus,
     InvoiceBase,
     InvoiceCreate,
-    InvoiceUpdate,
     InvoiceResponse,
     InvoiceWithImages
 )
@@ -21,13 +20,13 @@ from app.schemas.invoice_image import (
 
 __all__ = [
     # User
-    'UserBase', 'UserCreate', 'UserUpdate', 'UserResponse', 'UserLogin',
+    'UserBase', 'UserCreate', 'UserResponse', 'UserLogin',
     # Location
-    'LocationBase', 'LocationCreate', 'LocationUpdate', 'LocationResponse',
+    'LocationBase', 'LocationCreate', 'LocationResponse',
     # Category
-    'CategoryBase', 'CategoryCreate', 'CategoryUpdate', 'CategoryResponse',
+    'CategoryBase', 'CategoryCreate', 'CategoryResponse',
     # Invoice
-    'InvoiceStatus', 'InvoiceBase', 'InvoiceCreate', 'InvoiceUpdate',
+    'InvoiceStatus', 'InvoiceBase', 'InvoiceCreate',
     'InvoiceResponse', 'InvoiceWithImages',
     # Invoice Image
     'InvoiceImageBase', 'InvoiceImageCreate', 'InvoiceImageResponse',

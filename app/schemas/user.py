@@ -18,15 +18,7 @@ class UserCreate(UserBase):
     password: str = Field(..., min_length=8)
 
 
-class UserUpdate(BaseModel):
-    """Schema for updating user information"""
-    username: Optional[str] = Field(None, min_length=3, max_length=50)
-    email: Optional[EmailStr] = None
-    full_name: Optional[str] = Field(None, max_length=100)
-    avatar_url: Optional[str] = None
-    role: Optional[str] = Field(None, pattern='^(admin|staff)$')
-    password: Optional[str] = Field(None, min_length=8)
-    is_active: Optional[bool] = None
+
 
 
 class UserResponse(UserBase):

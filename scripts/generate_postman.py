@@ -220,43 +220,7 @@ def generate_postman_collection():
                         }
                     },
                     {
-                        "name": "Create Invoice",
-                        "event": [
-                            {
-                                "listen": "test",
-                                "script": {
-                                    "exec": [
-                                        "var jsonData = pm.response.json();",
-                                        "pm.environment.set(\"invoice_id\", jsonData.id);"
-                                    ],
-                                    "type": "text/javascript"
-                                }
-                            }
-                        ],
-                        "request": {
-                            "method": "POST",
-                            "header": [
-                                {"key": "Content-Type", "value": "application/json"},
-                                {"key": "Authorization", "value": "Bearer {{access_token}}"}
-                            ],
-                            "body": {
-                                "mode": "raw",
-                                "raw": json.dumps({
-                                    "location_id": "REPLACE_WITH_LOCATION_UUID",
-                                    "category_id": 1,
-                                    "note": "Test invoice from Postman",
-                                    "status": "draft"
-                                }, indent=4)
-                            },
-                            "url": {
-                                "raw": "{{base_url}}/api/v1/invoices/",
-                                "host": ["{{base_url}}"],
-                                "path": ["api", "v1", "invoices", ""]
-                            }
-                        }
-                    },
-                    {
-                        "name": "Upload Image",
+                        "name": "Create Invoice (Unified)",
                         "request": {
                             "method": "POST",
                             "header": [
@@ -265,6 +229,26 @@ def generate_postman_collection():
                             "body": {
                                 "mode": "formdata",
                                 "formdata": [
+                                    {
+                                        "key": "location_id",
+                                        "value": "REPLACE_WITH_LOCATION_UUID",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "category_id",
+                                        "value": "1",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "note",
+                                        "value": "Test invoice from Postman",
+                                        "type": "text"
+                                    },
+                                    {
+                                        "key": "status",
+                                        "value": "draft",
+                                        "type": "text"
+                                    },
                                     {
                                         "key": "file",
                                         "type": "file",
@@ -283,9 +267,9 @@ def generate_postman_collection():
                                 ]
                             },
                             "url": {
-                                "raw": "{{base_url}}/api/v1/invoices/{{invoice_id}}/images",
+                                "raw": "{{base_url}}/api/v1/invoices/",
                                 "host": ["{{base_url}}"],
-                                "path": ["api", "v1", "invoices", "{{invoice_id}}", "images"]
+                                "path": ["api", "v1", "invoices", ""]
                             }
                         }
                     }

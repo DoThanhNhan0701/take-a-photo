@@ -18,13 +18,7 @@ class LocationCreate(LocationBase):
     pass
 
 
-class LocationUpdate(BaseModel):
-    """Schema for updating location information"""
-    name: Optional[str] = Field(None, max_length=255)
-    address: Optional[str] = None
-    code: Optional[str] = Field(None, max_length=50)
-    gps_latitude: Optional[float] = Field(None, ge=-90, le=90)
-    gps_longitude: Optional[float] = Field(None, ge=-180, le=180)
+
 
 
 class LocationResponse(LocationBase):

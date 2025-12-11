@@ -2,12 +2,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 from app.models.category import Category
-from app.schemas.category import CategoryCreate, CategoryUpdate
-
-
-def get_category(db: Session, category_id: int) -> Optional[Category]:
-    """Get a category by ID"""
-    return db.query(Category).filter(Category.id == category_id).first()
+from app.schemas.category import CategoryCreate
 
 
 def get_category_by_code(db: Session, code: str) -> Optional[Category]:
@@ -36,29 +31,3 @@ def create_category(db: Session, category: CategoryCreate) -> Category:
     db.commit()
     db.refresh(db_category)
     return db_category
-
-
-def update_category(db: Session, category_id: int, category: CategoryUpdate) -> Optional[Category]:
-    """Update a category"""
-    db_category = get_category(db, category_id)
-    if not db_category:
-        return None
-    
-    update_data = category.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(db_category, field, value)
-    
-    db.commit()
-    db.refresh(db_category)
-    return db_category
-
-
-def delete_category(db: Session, category_id: int) -> bool:
-    """Delete a category"""
-    db_category = get_category(db, category_id)
-    if not db_category:
-        return False
-    
-    db.delete(db_category)
-    db.commit()
-    return True

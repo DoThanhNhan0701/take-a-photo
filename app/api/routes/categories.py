@@ -43,41 +43,4 @@ def list_categories(
     return categories
 
 
-@router.get("/{category_id}", response_model=category_schemas.CategoryResponse)
-def get_category(
-    category_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Get a category by ID"""
-    db_category = category_crud.get_category(db, category_id=category_id)
-    if db_category is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
-    return db_category
 
-
-@router.put("/{category_id}", response_model=category_schemas.CategoryResponse)
-def update_category(
-    category_id: int,
-    category: category_schemas.CategoryUpdate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Update a category"""
-    db_category = category_crud.update_category(db, category_id=category_id, category=category)
-    if db_category is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
-    return db_category
-
-
-@router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_category(
-    category_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Delete a category"""
-    success = category_crud.delete_category(db, category_id=category_id)
-    if not success:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
-    return None

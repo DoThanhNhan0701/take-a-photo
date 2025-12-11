@@ -76,23 +76,6 @@ def refresh_access_token(refresh_request: user_schemas.RefreshTokenRequest, db: 
 @router.get("/me", response_model=user_schemas.UserResponse)
 def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Get current authenticated user information"""
-    return current_user
-
-
-@router.put("/me", response_model=user_schemas.UserResponse)
-def update_current_user_info(
-    user_update: user_schemas.UserUpdate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Update current authenticated user information"""
-    # Don't allow changing username via this endpoint
-    if user_update.username and user_update.username != current_user.username:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot change username via this endpoint"
-        )
-    
     updated_user = user_crud.update_user(db, user_id=current_user.id, user=user_update)
     if updated_user is None:
         raise HTTPException(

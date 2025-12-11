@@ -3,15 +3,7 @@ from typing import Optional
 import uuid
 
 from app.models.invoice import Invoice
-from app.schemas.invoice import InvoiceCreate, InvoiceUpdate
-
-
-def get_invoice(db: Session, invoice_id: uuid.UUID, with_images: bool = False) -> Optional[Invoice]:
-    """Get an invoice by ID"""
-    query = db.query(Invoice)
-    if with_images:
-        query = query.options(joinedload(Invoice.images))
-    return query.filter(Invoice.id == invoice_id).first()
+from app.schemas.invoice import InvoiceCreate
 
 
 def get_invoices(
@@ -52,37 +44,6 @@ def create_invoice(db: Session, invoice: InvoiceCreate, user_id: uuid.UUID) -> I
     db.commit()
     db.refresh(db_invoice)
     return db_invoice
-
-
-def update_invoice(db: Session, invoice_id: uuid.UUID, invoice: InvoiceUpdate) -> Optional[Invoice]:
-    """Update an invoice"""
-    db_invoice = get_invoice(db, invoice_id)
-    if not db_invoice:
-        return None
-    
-    update_data = invoice.model_dump(exclude_unset=True)
-    
-    # Convert status enum to string if present
-    if 'status' in update_data and update_data['status']:
-        update_data['status'] = update_data['status'].value
-    
-    for field, value in update_data.items():
-        setattr(db_invoice, field, value)
-    
-    db.commit()
-    db.refresh(db_invoice)
-    return db_invoice
-
-
-def delete_invoice(db: Session, invoice_id: uuid.UUID) -> bool:
-    """Delete an invoice"""
-    db_invoice = get_invoice(db, invoice_id)
-    if not db_invoice:
-        return False
-    
-    db.delete(db_invoice)
-    db.commit()
-    return True
 
 
 from app.models.invoice_image import InvoiceImage

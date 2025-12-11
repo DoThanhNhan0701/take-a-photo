@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 
 from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate
+from app.schemas.user import UserCreate
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -58,26 +58,6 @@ def create_user(db: Session, user: UserCreate) -> User:
     return db_user
 
 
-def update_user(db: Session, user_id: uuid.UUID, user: UserUpdate) -> Optional[User]:
-    """Update a user"""
-    db_user = get_user(db, user_id)
-    if not db_user:
-        return None
-    
-    update_data = user.model_dump(exclude_unset=True)
-    
-    # Hash password if it's being updated
-    if 'password' in update_data:
-        update_data['password_hash'] = hash_password(update_data.pop('password'))
-    
-    for field, value in update_data.items():
-        setattr(db_user, field, value)
-    
-    db.commit()
-    db.refresh(db_user)
-    return db_user
-
-
 def update_last_login(db: Session, user_id: uuid.UUID) -> None:
     """Update user's last login timestamp"""
     db_user = get_user(db, user_id)
@@ -86,15 +66,7 @@ def update_last_login(db: Session, user_id: uuid.UUID) -> None:
         db.commit()
 
 
-def delete_user(db: Session, user_id: uuid.UUID) -> bool:
-    """Delete a user"""
-    db_user = get_user(db, user_id)
-    if not db_user:
-        return False
-    
-    db.delete(db_user)
-    db.commit()
-    return True
+
 
 
 def authenticate_user(db: Session, username: str, password: str) -> Optional[User]:

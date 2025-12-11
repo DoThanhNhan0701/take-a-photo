@@ -28,13 +28,7 @@ class InvoiceCreate(InvoiceBase):
     status: InvoiceStatus = InvoiceStatus.DRAFT
 
 
-class InvoiceUpdate(BaseModel):
-    """Schema for updating invoice information"""
-    location_id: Optional[uuid.UUID] = None
-    category_id: Optional[int] = None
-    status: Optional[InvoiceStatus] = None
-    note: Optional[str] = None
-    extra_metadata: Optional[Dict[str, Any]] = None
+
 
 
 class InvoiceResponse(InvoiceBase):
