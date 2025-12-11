@@ -85,9 +85,38 @@ def delete_invoice(db: Session, invoice_id: uuid.UUID) -> bool:
     return True
 
 
+from app.models.invoice_image import InvoiceImage
+
 def get_user_invoices_by_status(db: Session, user_id: uuid.UUID, status: str) -> list[Invoice]:
     """Get all invoices for a user with a specific status"""
     return db.query(Invoice).filter(
         Invoice.user_id == user_id,
         Invoice.status == status
     ).order_by(Invoice.captured_at.desc()).all()
+
+
+def add_invoice_image(
+    db: Session,
+    invoice_id: uuid.UUID,
+    file_path: str,
+    file_name: str,
+    file_size: int,
+    mime_type: str,
+    gps_latitude: Optional[float] = None,
+    gps_longitude: Optional[float] = None
+) -> InvoiceImage:
+    """Add an image to an invoice"""
+    db_image = InvoiceImage(
+        invoice_id=invoice_id,
+        file_path=file_path,
+        file_name=file_name,
+        file_size=file_size,
+        mime_type=mime_type,
+        gps_latitude=gps_latitude,
+        gps_longitude=gps_longitude
+    )
+    db.add(db_image)
+    db.commit()
+    db.refresh(db_image)
+    return db_image
+
