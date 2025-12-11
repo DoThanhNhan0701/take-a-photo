@@ -8,6 +8,7 @@ from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.schemas import invoice as invoice_schemas
 from app.crud import invoice as invoice_crud
+from app.crud import location as location_crud
 from app.models.user import User
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
@@ -20,19 +21,27 @@ async def create_invoice(
     note: Optional[str] = Form(None),
     status: str = Form("draft"),
     file: UploadFile = File(...),
-    gps_latitude: Optional[float] = Form(None, include_in_schema=False),
-    gps_longitude: Optional[float] = Form(None, include_in_schema=False),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Create a new invoice with an image (auto-assigned to current user)"""
     # 1. Create Invoice
+    # Get GPS from location if provided
+    gps_latitude = None
+    gps_longitude = None
+    
+    if location_id:
+        location = location_crud.get_location(db, location_id=location_id)
+        if location:
+            gps_latitude = float(location.gps_latitude) if location.gps_latitude is not None else None
+            gps_longitude = float(location.gps_longitude) if location.gps_longitude is not None else None
+
     # Add GPS to extra_metadata if provided
     extra_metadata = {}
     if gps_latitude is not None:
-        extra_metadata["gps_latitude"] = float(gps_latitude)
+        extra_metadata["gps_latitude"] = gps_latitude
     if gps_longitude is not None:
-        extra_metadata["gps_longitude"] = float(gps_longitude)
+        extra_metadata["gps_longitude"] = gps_longitude
         
     invoice_data = invoice_schemas.InvoiceCreate(
         location_id=location_id,

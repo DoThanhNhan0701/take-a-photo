@@ -11,6 +11,11 @@ def get_location_by_code(db: Session, code: str) -> Optional[Location]:
     return db.query(Location).filter(Location.code == code).first()
 
 
+def get_location(db: Session, location_id: uuid.UUID) -> Optional[Location]:
+    """Get a location by ID"""
+    return db.query(Location).filter(Location.id == location_id).first()
+
+
 def get_locations(db: Session, skip: int = 0, limit: int = 100) -> list[Location]:
     """Get all locations with pagination"""
     return db.query(Location).offset(skip).limit(limit).all()
