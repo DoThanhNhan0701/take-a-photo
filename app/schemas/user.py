@@ -16,14 +16,20 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """Schema for creating a new user"""
     password: str = Field(..., min_length=8)
+    location_id: uuid.UUID
 
 
 
 
+
+# Import token schemas for convenience
+from app.schemas.token import Token, RefreshTokenRequest
+from app.schemas.location import LocationResponse
 
 class UserResponse(UserBase):
     """Schema for user responses"""
     id: uuid.UUID
+    location: Optional[LocationResponse] = None
     is_active: bool
     last_login_at: Optional[datetime] = None
     created_at: datetime
@@ -36,10 +42,6 @@ class UserLogin(BaseModel):
     """Schema for user login"""
     username: str
     password: str
-
-
-# Import token schemas for convenience
-from app.schemas.token import Token, RefreshTokenRequest
 
 __all__ = [
     'UserBase',

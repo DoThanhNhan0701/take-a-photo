@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Boolean, DateTime, Text
+from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -25,6 +25,8 @@ class User(Base):
     
     # Relationships
     invoices = relationship("Invoice", back_populates="user", cascade="all, delete-orphan")
+    location_id = Column(UUID(as_uuid=True), ForeignKey('locations.id'), nullable=True)
+    location = relationship("Location", back_populates="users")
     
     def __repr__(self):
         return f"<User(username='{self.username}', email='{self.email}')>"

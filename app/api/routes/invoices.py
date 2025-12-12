@@ -16,7 +16,6 @@ router = APIRouter(prefix="/invoices", tags=["invoices"])
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_invoice(
-    location_id: Optional[uuid.UUID] = Form(None),
     category_id: Optional[int] = Form(None),
     note: Optional[str] = Form(None),
     status: str = Form("draft"),
@@ -26,15 +25,23 @@ async def create_invoice(
 ):
     """Create a new invoice with an image (auto-assigned to current user)"""
     # 1. Create Invoice
-    # Get GPS from location if provided
+    # Get location from user
+    if not current_user.location_id:
+        raise HTTPException(
+            status_code=400,
+            detail="User must be assigned to a location to create invoices"
+        )
+        
+    location_id = current_user.location_id
+    
+    # Get GPS from location
     gps_latitude = None
     gps_longitude = None
     
-    if location_id:
-        location = location_crud.get_location(db, location_id=location_id)
-        if location:
-            gps_latitude = float(location.gps_latitude) if location.gps_latitude is not None else None
-            gps_longitude = float(location.gps_longitude) if location.gps_longitude is not None else None
+    location = location_crud.get_location(db, location_id=location_id)
+    if location:
+        gps_latitude = float(location.gps_latitude) if location.gps_latitude is not None else None
+        gps_longitude = float(location.gps_longitude) if location.gps_longitude is not None else None
 
     # Add GPS to extra_metadata if provided
     extra_metadata = {}

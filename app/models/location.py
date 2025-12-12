@@ -22,6 +22,7 @@ class Location(Base):
     
     # Relationships
     invoices = relationship("Invoice", back_populates="location")
+    users = relationship("User", back_populates="location")
     
     def __repr__(self):
         return f"<Location(name='{self.name}', code='{self.code}')>"
