@@ -76,11 +76,4 @@ def refresh_access_token(refresh_request: user_schemas.RefreshTokenRequest, db: 
 @router.get("/me", response_model=user_schemas.UserResponse)
 def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Get current authenticated user information"""
-    updated_user = user_crud.update_user(db, user_id=current_user.id, user=user_update)
-    if updated_user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    return updated_user
+    return current_user

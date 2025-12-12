@@ -44,7 +44,6 @@ from app.schemas.token import Token, RefreshTokenRequest
 __all__ = [
     'UserBase',
     'UserCreate',
-    'UserUpdate',
     'UserResponse',
     'UserLogin',
     'Token',
